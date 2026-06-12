@@ -1,0 +1,8 @@
+{
+  "name": "Discovery Health Flywheel",
+  "description": "Unified claims automation platform where intelligent claims savings are reinvested into proactive member health interventions.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
