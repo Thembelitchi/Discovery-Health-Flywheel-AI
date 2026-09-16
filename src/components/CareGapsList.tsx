@@ -1,6 +1,5 @@
-import React from 'react';
 import { CareGap } from '../types';
-import { Sparkles, HeartPulse, Send, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { Sparkles, Send, CheckCircle2, AlertTriangle } from 'lucide-react';
 
 interface Props {
   careGaps: CareGap[];

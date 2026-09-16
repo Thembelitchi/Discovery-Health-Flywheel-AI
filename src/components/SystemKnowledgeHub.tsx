@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { 
-  X, HelpCircle, BookOpen, Clipboard, Check, Terminal, 
-  Layers, Landmark, HeartPulse, ShieldAlert, Lock, Activity, 
-  Coins, Sparkles, AlertCircle 
+  X, Clipboard, Check, Terminal, HeartPulse, ShieldAlert,
+  Lock, Activity, Coins, Sparkles, AlertCircle
 } from 'lucide-react';
 
 interface Props {

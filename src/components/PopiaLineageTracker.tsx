@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { ShieldCheck, Eye, EyeOff, Lock, Unlock, Database, Code, RefreshCw } from 'lucide-react';
+import { useState } from 'react';
+import { Lock, Unlock, Database } from 'lucide-react';
 
 interface PlainAndTokenPair {
   field: string;
