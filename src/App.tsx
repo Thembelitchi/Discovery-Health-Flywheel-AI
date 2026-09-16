@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Claim, CareGap, FinancialSummary } from './types';
 import DashboardMetrics from './components/DashboardMetrics';
 import ClaimsFeed from './components/ClaimsFeed';
@@ -11,7 +11,7 @@ import PopiaLineageTracker from './components/PopiaLineageTracker';
 import MvpDemoWizards from './components/MvpDemoWizards';
 import SystemKnowledgeHub from './components/SystemKnowledgeHub';
 import HomeDashboardView from './components/HomeDashboardView';
-import { Sparkles, Activity, FileText, HeartPulse, RefreshCw, AlertCircle, HelpCircle, Menu, X } from 'lucide-react';
+import { Activity, AlertCircle, HelpCircle, Menu, X } from 'lucide-react';
 
 export default function App() {
   const [claims, setClaims] = useState<Claim[]>([]);
@@ -24,6 +24,9 @@ export default function App() {
   const [isHubOpen, setIsHubOpen] = useState(false);
   const [reportContent, setReportContent] = useState<string | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  // True while the dashboard is showing a roadmap projection rather than
+  // the live ledger. Never let the two be visually indistinguishable.
+  const [isSimulated, setIsSimulated] = useState(false);
 
   // Auto scroll to top of window on tab change to prevent user from keeping scrolling down
   useEffect(() => {
@@ -122,9 +125,9 @@ export default function App() {
   };
 
   const generateReport = () => {
-    const reportText = `DISCOVERY HEALTH FLYWHEEL - SYSTEM AUDIT REPORT (mTLS VERIFIED)
-Date: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}
-Audit Ledger Session Hash: DH-X-${Math.floor(Math.random() * 900000 + 100000)}
+    const reportText = `DISCOVERY HEALTH FLYWHEEL - LEDGER SUMMARY
+Generated: ${new Date().toISOString()}
+Source: in-memory prototype ledger, synthetic data
 
 [REINVESTMENT ANALYSIS MATRIX]
 --------------------------------------------------
@@ -134,16 +137,19 @@ Flagged for Audit       : ${financialSummary?.flagged_review_count?.toLocaleStri
 Total Value Handled     : ZAR ${financialSummary?.total_claims_value_zar?.toLocaleString() || "120,000"} ZAR
 Cumulative Saved Pool   : ZAR ${financialSummary?.savings_reinvestment_pool_zar?.toLocaleString() || "4,930"} ZAR
 Direct Preventative Out : ZAR ${financialSummary?.preventative_outlay_zar?.toLocaleString() || "0"} ZAR
-Calculated Net Velocity : +12.4% health stabilization
 
-[SECURITY PROTOCOL STATUS]
+[DERIVATION]
 --------------------------------------------------
-AES-256 Tokenization    : ENABLED via Cloudera SDX
-Council for Medical Sch : COMPLIANT (SARR-902)
-SAP OData GL Postings   : RECONCILED (99.8% match confidence)
+gross savings = realised admin savings + avoided leakage
+pool          = gross savings - preventative outlay
+
+Realised Admin Savings  : ZAR ${financialSummary?.realised_admin_savings_zar?.toLocaleString() || "0"} ZAR
+Avoided Leakage         : ZAR ${financialSummary?.avoided_leakage_zar?.toLocaleString() || "0"} ZAR
 
 --------------------------------------------------
-Report visual display validated. System operational.`;
+Figures are computed from the claim and care-gap rows on read.
+This prototype performs no tokenisation, holds no compliance
+certification, and posts to no financial system.`;
 
     setReportContent(reportText);
     setIsHubOpen(true);
@@ -163,38 +169,77 @@ Report visual display validated. System operational.`;
     }
   };
 
+  /**
+   * Projected states for the 90-day roadmap demo.
+   *
+   * These are ILLUSTRATIVE PROJECTIONS, not measurements. Selecting one
+   * replaces the live ledger in the UI, so `isSimulated` drives a banner that
+   * makes the swap unmistakable - a viewer must never mistake a projection
+   * for a reading off the real ledger.
+   *
+   * Each row is internally consistent: status counts sum to the total, and
+   * pool = realised + avoided - outlay, the same invariant the server asserts.
+   */
+  const MILESTONE_PROJECTIONS: Record<'m1' | 'm2' | 'm3', { label: string; summary: FinancialSummary }> = {
+    m1: {
+      label: 'Month 1 (Foundation) - projected: 1.2M claims streamed from the ingestion pipeline',
+      summary: {
+        total_claims_count: 1_200_000,
+        auto_approved_count: 900_000,
+        flagged_review_count: 240_000,
+        rejected_count: 60_000,
+        total_claims_value_zar: 115_000_000,
+        realised_admin_savings_zar: 1_850_000,
+        avoided_leakage_zar: 900_000,
+        gross_savings_zar: 2_750_000,
+        preventative_outlay_zar: 450_000,
+        savings_reinvestment_pool_zar: 2_300_000,
+      },
+    },
+    m2: {
+      label: 'Month 2 (Claims Pilot) - projected: document extraction live on the claims stream',
+      summary: {
+        total_claims_count: 4_500_000,
+        auto_approved_count: 3_400_000,
+        flagged_review_count: 900_000,
+        rejected_count: 200_000,
+        total_claims_value_zar: 390_000_000,
+        realised_admin_savings_zar: 11_000_000,
+        avoided_leakage_zar: 5_000_000,
+        gross_savings_zar: 16_000_000,
+        preventative_outlay_zar: 1_200_000,
+        savings_reinvestment_pool_zar: 14_800_000,
+      },
+    },
+    m3: {
+      label: 'Month 3 (Care Gap Scale) - projected: reinvestment pool funding preventative dispatch',
+      summary: {
+        total_claims_count: 15_000_000,
+        auto_approved_count: 12_300_000,
+        flagged_review_count: 2_400_000,
+        rejected_count: 300_000,
+        total_claims_value_zar: 1_275_000_000,
+        realised_admin_savings_zar: 42_000_000,
+        avoided_leakage_zar: 21_000_000,
+        gross_savings_zar: 63_000_000,
+        preventative_outlay_zar: 10_800_000,
+        savings_reinvestment_pool_zar: 52_200_000,
+      },
+    },
+  };
+
   const handleMilestoneChange = (milestone: 'm1' | 'm2' | 'm3') => {
-    if (milestone === 'm1') {
-      setFinancialSummary({
-        total_claims_count: 1200000,
-        total_claims_value_zar: 115000000,
-        auto_approved_count: 960000,
-        flagged_review_count: 240000,
-        savings_reinvestment_pool_zar: 2300000,
-        preventative_outlay_zar: 450000
-      });
-      showNotice("Month 1 Foundation State: Streamed 1.2M transactions", "info");
-    } else if (milestone === 'm2') {
-      setFinancialSummary({
-        total_claims_count: 4500000,
-        total_claims_value_zar: 390000000,
-        auto_approved_count: 3600000,
-        flagged_review_count: 900000,
-        savings_reinvestment_pool_zar: 14800000,
-        preventative_outlay_zar: 1200000
-      });
-      showNotice("Month 2 Claims Pilot State: Document AI accuracy 96.4%", "success");
-    } else if (milestone === 'm3') {
-      setFinancialSummary({
-        total_claims_count: 15000000,
-        total_claims_value_zar: 1275000000,
-        auto_approved_count: 12600000,
-        flagged_review_count: 2400000,
-        savings_reinvestment_pool_zar: 309380908,
-        preventative_outlay_zar: 10800000
-      });
-      showNotice("Month 3 Care Gap Scale State: -18% ER visits reduction (p=0.003)", "success");
-    }
+    const projection = MILESTONE_PROJECTIONS[milestone];
+    setFinancialSummary(projection.summary);
+    setIsSimulated(true);
+    showNotice(projection.label, 'info');
+  };
+
+  /** Drops the projection and re-reads the real ledger from the server. */
+  const exitSimulation = () => {
+    setIsSimulated(false);
+    fetchData();
+    showNotice('Returned to the live ledger.', 'success');
   };
 
   return (
@@ -379,12 +424,16 @@ Report visual display validated. System operational.`;
 
                   <div className="flex items-end justify-between border-t border-white/10 pt-6 mt-6">
                     <div>
-                      <span className="text-[75px] leading-[0.8] font-black tracking-tighter text-white font-display">84</span>
-                      <div className="text-[9px] font-bold tracking-[0.2em] uppercase text-white/40 mt-2">Momentum Index Score</div>
+                      <span className="text-[75px] leading-[0.8] font-black tracking-tighter text-white font-display">
+                        {financialSummary?.total_claims_count ?? 0}
+                      </span>
+                      <div className="text-[9px] font-bold tracking-[0.2em] uppercase text-white/40 mt-2">Claims in the ledger</div>
                     </div>
                     <div className="pb-1 text-right">
-                      <div className="text-2xl font-bold text-flywheel animate-pulse">+12.4%</div>
-                      <div className="text-[9px] font-bold tracking-widest uppercase text-white/40">vs Last 7 Days</div>
+                      <div className="text-2xl font-bold text-flywheel">
+                        R {(financialSummary?.savings_reinvestment_pool_zar ?? 0).toLocaleString()}
+                      </div>
+                      <div className="text-[9px] font-bold tracking-widest uppercase text-white/40">Pool available</div>
                     </div>
                   </div>
                 </div>
@@ -397,6 +446,27 @@ Report visual display validated. System operational.`;
             )}
 
             {/* Bento Metrics indicators */}
+            {isSimulated && (
+              <div
+                className="mb-6 p-4 border border-orange-400 bg-orange-400/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                id="simulation-mode-banner"
+              >
+                <div className="flex items-center gap-2 text-orange-300">
+                  <AlertCircle size={14} className="flex-shrink-0" />
+                  <span className="text-[11px] font-bold uppercase tracking-wider">
+                    Simulation mode &mdash; showing a roadmap projection, not the live ledger
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={exitSimulation}
+                  className="text-[10px] font-black uppercase tracking-widest border border-orange-400 text-orange-300 px-3 py-1.5 hover:bg-orange-400 hover:text-black transition-all flex-shrink-0"
+                >
+                  Return to live ledger
+                </button>
+              </div>
+            )}
+
             {financialSummary && <DashboardMetrics summary={financialSummary} onNavigate={setActiveTab} />}
           </div>
         )}

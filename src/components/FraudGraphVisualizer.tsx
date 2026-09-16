@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShieldCheck, ShieldAlert, AlertTriangle, Network, User, FileText, Activity, Layers, Code, HardDrive } from 'lucide-react';
+import { User, FileText, Activity, Code, HardDrive } from 'lucide-react';
 
 interface FraudRiskNode {
   id: string;

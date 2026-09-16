@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Calendar, HelpCircle, ChevronRight, CheckSquare, Settings2, PlayCircle } from 'lucide-react';
+import { useState } from 'react';
+import { Calendar, CheckSquare, Settings2 } from 'lucide-react';
 
 interface Props {
   onMilestoneChange: (milestone: 'm1' | 'm2' | 'm3') => void;
