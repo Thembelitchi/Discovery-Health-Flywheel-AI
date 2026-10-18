@@ -4,6 +4,10 @@ on:
   push:
     branches: [main]
   pull_request:
+  # Lets CI be started by hand from the Actions tab. Without this the only way
+  # to get a result is a push or a re-run of an existing run, and a re-run
+  # reuses the original run's configuration rather than building a fresh one.
+  workflow_dispatch:
 
 jobs:
   verify:
