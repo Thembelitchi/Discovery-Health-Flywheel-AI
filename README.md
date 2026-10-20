@@ -122,15 +122,28 @@ annually, exposes all twelve assumptions in an in-app panel with a note on how
 well-founded each one is, and shows three scenarios rather than a single
 number:
 
-| Scenario | Return |
-|---|---|
-| Conservative | ~0.99x — roughly break-even |
-| Base case | ~1.90x |
-| Optimistic | ~2.63x |
+| Scenario | Benefit | Cost | Return |
+|---|---|---|---|
+| Conservative | R 248.5m | R 177.4m | **~1.40x** |
+| Base case | R 414.1m | R 136.5m | **~3.03x** |
+| Optimistic | R 538.3m | R 122.8m | **~4.38x** |
 
-Base-case benefit works out to about **0.5% of claims paid**. The return turns
-mostly on the share of admissions genuinely avoidable, which is flagged in the
-panel as the least validated input in the model.
+The model is sized to a scheme of Discovery's order of magnitude: 75M claims a
+year at an average of R950, i.e. roughly **R71bn of claims paid**. Base-case
+benefit is **0.58% of that** — the case does not depend on capturing a large
+share of scheme spend.
+
+The return rests mostly on two inputs, both exposed as sliders: incremental FWA
+recovery (default 0.30% of claims paid, against an estimated 3–10% of spend lost
+to fraud, waste and abuse) and the share of admissions genuinely avoidable. Move
+those two first.
+
+> **Calibration is a planning estimate, not a citation.** Claim volume, average
+> claim value, chronic-registration prevalence and average admission cost were
+> sized from general knowledge of the South African private healthcare market.
+> They should be replaced with figures from the scheme's own published accounts
+> before this model informs a funding decision. Every one is marked in the
+> in-app assumptions panel.
 
 ---
 

@@ -26,22 +26,21 @@ const ANNUAL_COSTS = {
 
 /** Unit economics held constant; the sliders drive the rest. */
 const AUTO_ADJUDICATION_COST_PER_CLAIM = 6;
-const AVERAGE_CLAIM_VALUE = 850;
-const RECOVERY_UPLIFT_RATE = 0.001; // 0.1% of claims value recovered as FWA
-const HIGH_RISK_MEMBERS = 150_000;
-const INTERVENTION_COST_PER_MEMBER = 180;
+const AVERAGE_CLAIM_VALUE = 950;
+const HIGH_RISK_MEMBERS = 600_000;
+const INTERVENTION_COST_PER_MEMBER = 450;
 const HIGH_RISK_ADMISSION_RATE = 0.18;
 const ADMISSIONS_AVOIDED_SHARE = 0.12;
-const AVOIDED_ADMISSION_COST = 12_000;
+const AVOIDED_ADMISSION_COST = 35_000;
 
 /**
  * Downside and upside bands. A single point estimate hides the fact that the
  * whole case turns on two or three assumptions.
  */
 const SCENARIOS = {
-  conservative: { label: 'Conservative', benefit: 0.65, cost: 1.25 },
+  conservative: { label: 'Conservative', benefit: 0.6, cost: 1.3 },
   base: { label: 'Base case', benefit: 1, cost: 1 },
-  optimistic: { label: 'Optimistic', benefit: 1.25, cost: 0.9 },
+  optimistic: { label: 'Optimistic', benefit: 1.3, cost: 0.9 },
 } as const;
 
 type ScenarioKey = keyof typeof SCENARIOS;
@@ -50,11 +49,13 @@ const zar = (value: number) => `R ${Math.round(value).toLocaleString('en-ZA')}`;
 const millions = (value: number) => `R ${(value / 1_000_000).toFixed(1)}m`;
 
 export default function ExecutiveRoiCalculator() {
-  const [annualClaims, setAnnualClaims] = useState(45_000_000);
-  const [manualReviewShare, setManualReviewShare] = useState(22);
+  const [annualClaims, setAnnualClaims] = useState(75_000_000);
+  const [manualReviewShare, setManualReviewShare] = useState(12);
   const [automationUplift, setAutomationUplift] = useState(30);
   const [manualReviewCost, setManualReviewCost] = useState(55);
   const [careGapClosure, setCareGapClosure] = useState(15);
+  // Recovery is the most arguable input, so it is a dial rather than a constant.
+  const [recoveryRate, setRecoveryRate] = useState(0.3);
   const [scenario, setScenario] = useState<ScenarioKey>('base');
   const [showAssumptions, setShowAssumptions] = useState(false);
 
@@ -70,7 +71,7 @@ export default function ExecutiveRoiCalculator() {
 
   /** Incremental fraud, waste and abuse recovered as a share of claims paid. */
   const annualClaimsValue = annualClaims * AVERAGE_CLAIM_VALUE;
-  const recoveryBenefit = annualClaimsValue * RECOVERY_UPLIFT_RATE;
+  const recoveryBenefit = annualClaimsValue * (recoveryRate / 100);
 
   /** Admissions avoided because a care gap was closed in time. */
   const membersReached = HIGH_RISK_MEMBERS * (careGapClosure / 100);
@@ -98,14 +99,14 @@ export default function ExecutiveRoiCalculator() {
   ];
 
   const assumptions: Array<{ label: string; value: string; basis: string }> = [
-    { label: 'Average claim value', value: zar(AVERAGE_CLAIM_VALUE), basis: 'Planning assumption - replace with scheme actual' },
+    { label: 'Average claim value', value: zar(AVERAGE_CLAIM_VALUE), basis: 'Sized so volume x value approximates scheme claims paid - replace with actual' },
     { label: 'Cost to auto-adjudicate', value: `${zar(AUTO_ADJUDICATION_COST_PER_CLAIM)} / claim`, basis: 'Planning assumption' },
-    { label: 'Incremental FWA recovery', value: `${(RECOVERY_UPLIFT_RATE * 100).toFixed(2)}% of claims paid`, basis: 'Deliberately conservative; unvalidated' },
-    { label: 'High-risk cohort', value: `${HIGH_RISK_MEMBERS.toLocaleString('en-ZA')} lives`, basis: 'Planning assumption' },
-    { label: 'Intervention cost', value: `${zar(INTERVENTION_COST_PER_MEMBER)} / member / year`, basis: 'Planning assumption' },
+    { label: 'Incremental FWA recovery', value: `${recoveryRate.toFixed(2)}% of claims paid`, basis: 'Slider. Against 3-10% estimated leakage this is a small uplift' },
+    { label: 'High-risk cohort', value: `${HIGH_RISK_MEMBERS.toLocaleString('en-ZA')} lives`, basis: 'Approx. chronic-registration prevalence - replace with CDL actual' },
+    { label: 'Intervention cost', value: `${zar(INTERVENTION_COST_PER_MEMBER)} / member / year`, basis: 'Blended; consistent with the R380-R850 care gaps in this console' },
     { label: 'Admission rate in cohort', value: `${(HIGH_RISK_ADMISSION_RATE * 100).toFixed(0)}%`, basis: 'Planning assumption - needs actuarial input' },
     { label: 'Share of admissions avoidable', value: `${(ADMISSIONS_AVOIDED_SHARE * 100).toFixed(0)}%`, basis: 'Most uncertain input in the model' },
-    { label: 'Cost per avoided admission', value: zar(AVOIDED_ADMISSION_COST), basis: 'Planning assumption' },
+    { label: 'Cost per avoided admission', value: zar(AVOIDED_ADMISSION_COST), basis: 'SA private medical admission - replace with scheme actual' },
     { label: 'Platform & infrastructure', value: `${millions(ANNUAL_COSTS.platformInfrastructure)} / year`, basis: 'Programme budget estimate' },
     { label: 'Data science & ML engineering', value: `${millions(ANNUAL_COSTS.dataScienceAndMlEngineering)} / year`, basis: 'Programme budget estimate' },
     { label: 'Integration & change management', value: `${millions(ANNUAL_COSTS.integrationAndChangeManagement)} / year`, basis: 'Year-one weighted' },
@@ -147,8 +148,8 @@ export default function ExecutiveRoiCalculator() {
           <Slider
             label="Annual claims volume"
             display={`${(annualClaims / 1_000_000).toFixed(0)}M / year`}
-            min={10_000_000}
-            max={100_000_000}
+            min={20_000_000}
+            max={200_000_000}
             step={1_000_000}
             value={annualClaims}
             onChange={setAnnualClaims}
@@ -188,6 +189,15 @@ export default function ExecutiveRoiCalculator() {
             step={1}
             value={careGapClosure}
             onChange={setCareGapClosure}
+          />
+          <Slider
+            label="Incremental FWA recovery"
+            display={`${recoveryRate.toFixed(2)}% of claims paid`}
+            min={0.05}
+            max={1}
+            step={0.05}
+            value={recoveryRate}
+            onChange={setRecoveryRate}
           />
 
           <div className="pt-4 border-t border-white/5">
@@ -291,9 +301,10 @@ export default function ExecutiveRoiCalculator() {
               );
             })}
             <p className="text-[9px] text-white/30 pt-1 leading-relaxed">
-              The downside case is close to break-even. That is the honest shape of this
-              programme: the return depends on the share of admissions genuinely avoidable,
-              which is the least validated input in the model.
+              Even the downside pays back, which is what you would expect at this scale:
+              the benefit is under 1% of claims paid. The return rests mostly on recovery
+              uplift and on the share of admissions genuinely avoidable &mdash; the two
+              least validated inputs. Move those two sliders first.
             </p>
           </div>
 
