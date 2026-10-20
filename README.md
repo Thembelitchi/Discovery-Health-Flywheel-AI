@@ -123,11 +123,11 @@ an assumption, and shows three scenarios rather than a single number:
 
 | Scenario | Benefit | Cost | Return |
 |---|---|---|---|
-| Conservative | R 293.2m | R 212.6m | **~1.38x** |
-| Base case | R 488.8m | R 163.5m | **~2.99x** |
-| Optimistic | R 635.4m | R 147.2m | **~4.32x** |
+| Conservative | R 266.4m | R 212.6m | **~1.25x** |
+| Base case | R 444.0m | R 163.5m | **~2.72x** |
+| Optimistic | R 577.3m | R 147.2m | **~3.92x** |
 
-Base-case benefit is **0.55% of claims paid** — the case does not depend on
+Base-case benefit is **0.50% of claims paid** — the case does not depend on
 capturing a large share of scheme spend.
 
 ### What is published, and what is assumed
@@ -144,10 +144,25 @@ its June 2026 AGM:
 | Chronic cohort | over 1,000,000 beneficiaries |
 | Average cost per hospital admission | R74,613 |
 
-A sixth anchor is older and wider in scope: Discovery Health reported **R555m of
-fraud, waste and abuse recovered across its client schemes in 2018**. The
-recovery slider therefore models an *incremental* uplift on an established
-forensic programme (default 0.15%), not the programme itself.
+### Recovery: incremental only
+
+Discovery Health said in **April 2024** that its forensic programme recovers
+**"around R500-million per year"**, which it described as *"about 1% of our
+healthcare claims costs"*, and cited a global estimate that **3–10% of
+healthcare spend** is lost to fraud, waste and abuse. The Council for Medical
+Schemes puts industry-wide losses at **up to R28bn a year**.
+
+Two caveats keep the slider conservative:
+
+- That R500m is **across all 19 schemes Discovery administers**, not DHMS alone,
+  so the DHMS share is smaller.
+- R500m against R89.4bn of DHMS claims is **0.56%, not the 1% quoted** — the
+  percentage is stated against a different base. Both figures are reported here
+  rather than reconciled, because the discrepancy is the reviewer's to resolve.
+
+The slider therefore models an *incremental* uplift on an already-running
+programme — default **0.10%** of claims paid (~R89m) — and never claims that
+programme's existing yield as new benefit.
 
 The remaining inputs — manual review share, cost per manual review, intervention
 cost, admission rate in the cohort, share of admissions avoidable, and the four

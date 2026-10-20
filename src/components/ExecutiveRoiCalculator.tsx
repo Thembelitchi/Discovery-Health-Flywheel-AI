@@ -35,10 +35,18 @@ const ANNUAL_COSTS = {
  *   chronic cohort     over 1,000,000 beneficiaries (2025 AGM presentation)
  *   hospital admission R74,613 average
  *
- * One further anchor, older and wider in scope: Discovery Health reported
- * R555m of fraud, waste and abuse recovered across its client schemes in 2018.
- * The recovery slider therefore models an INCREMENTAL uplift on an established
- * forensic programme, not the programme itself.
+ * Recovery anchors, from Discovery Health in April 2024: the existing forensic
+ * programme recovers "around R500-million per year", described as "about 1% of
+ * our healthcare claims costs", and 3-10% of healthcare spend worldwide is
+ * attributed to fraud, waste and abuse. The Council for Medical Schemes puts
+ * industry-wide losses at up to R28bn a year.
+ *
+ * Two caveats that keep the recovery slider conservative. That R500m is across
+ * all 19 schemes Discovery administers, not DHMS alone, so the DHMS share is
+ * smaller. And R500m against R89.4bn of DHMS claims is 0.56%, not the 1% cited
+ * - the percentage is quoted against a different base. The slider therefore
+ * models a modest INCREMENTAL uplift on an established programme, never the
+ * programme's own yield.
  */
 const PUBLISHED = {
   claimsPaidZar: 89_400_000_000,
@@ -46,7 +54,11 @@ const PUBLISHED = {
   beneficiaries: 2_725_122,
   chronicCohort: 1_000_000,
   averageAdmissionZar: 74_613,
-  fwaRecoveredZar2018: 555_000_000,
+  /** ~R500m/year across all 19 schemes Discovery administers (2024). */
+  fwaRecoveredZarPerYear: 500_000_000,
+  /** Share of healthcare spend attributed to FWA worldwide (Discovery, 2024). */
+  fwaGlobalShareLow: 0.03,
+  fwaGlobalShareHigh: 0.10,
 } as const;
 
 /** Derived from published totals rather than assumed. */
@@ -82,7 +94,7 @@ export default function ExecutiveRoiCalculator() {
   const [manualReviewCost, setManualReviewCost] = useState(55);
   const [careGapClosure, setCareGapClosure] = useState(15);
   // Recovery is the most arguable input, so it is a dial rather than a constant.
-  const [recoveryRate, setRecoveryRate] = useState(0.15);
+  const [recoveryRate, setRecoveryRate] = useState(0.10);
   const [scenario, setScenario] = useState<ScenarioKey>('base');
   const [showAssumptions, setShowAssumptions] = useState(false);
 
@@ -137,7 +149,7 @@ export default function ExecutiveRoiCalculator() {
     { label: 'Beneficiaries', value: PUBLISHED.beneficiaries.toLocaleString('en-ZA'), basis: 'DHMS at 31 December 2025', published: true },
     { label: 'Chronic cohort', value: `${HIGH_RISK_MEMBERS.toLocaleString('en-ZA')} lives`, basis: 'DHMS 2025 AGM: over 1 million members live with a chronic condition', published: true },
     { label: 'Cost per avoided admission', value: zar(AVOIDED_ADMISSION_COST), basis: 'DHMS 2025 average cost per hospital admission', published: true },
-    { label: 'Incremental FWA recovery', value: `${recoveryRate.toFixed(2)}% of claims paid`, basis: `Slider. Uplift on an existing programme that recovered ${millions(PUBLISHED.fwaRecoveredZar2018)} across client schemes in 2018` },
+    { label: 'Incremental FWA recovery', value: `${recoveryRate.toFixed(2)}% of claims paid`, basis: `Slider. Incremental only: the existing programme already recovers ~${millions(PUBLISHED.fwaRecoveredZarPerYear)}/yr across 19 schemes (2024)` },
     { label: 'Claims manually reviewed today', value: `${manualReviewShare}%`, basis: 'Assumption - not published; ask claims operations' },
     { label: 'Manual review cost / claim', value: zar(manualReviewCost), basis: 'Assumption - blended assessor cost' },
     { label: 'Cost to auto-adjudicate', value: `${zar(AUTO_ADJUDICATION_COST_PER_CLAIM)} / claim`, basis: 'Assumption' },
@@ -346,6 +358,12 @@ export default function ExecutiveRoiCalculator() {
               the benefit is under 1% of claims paid. The return rests mostly on recovery
               uplift and on the share of admissions genuinely avoidable &mdash; the two
               least validated inputs. Move those two sliders first.
+            </p>
+            <p className="text-[9px] text-white/30 pt-1 leading-relaxed">
+              Recovery headroom, for scale: Discovery Health put global fraud, waste and abuse at
+              3&ndash;10% of healthcare spend in 2024, and the Council for Medical Schemes puts
+              industry losses at up to R28bn a year. The slider&rsquo;s default is a fraction of
+              one percent, and counts only what a better model adds to a programme already running.
             </p>
           </div>
 
