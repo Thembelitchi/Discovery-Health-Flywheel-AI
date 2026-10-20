@@ -78,7 +78,7 @@ export default function DashboardMetrics({ summary, onNavigate }: Props) {
           </div>
         </div>
         <p className="text-[10px] uppercase font-bold tracking-widest text-white/40 mt-4 leading-normal">
-          {summary.auto_approved_count} of {summary.total_claims_count} claims automated
+          {summary.auto_approved_count.toLocaleString()} of {summary.total_claims_count.toLocaleString()} claims automated
         </p>
       </div>
 

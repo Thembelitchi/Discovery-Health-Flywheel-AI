@@ -31,7 +31,11 @@ export const seedProviders: Provider[] = [
   { practice_number: "0334812", name: "Pathcare Labs SA", type: "Laboratory" },
 ];
 
-export const seedClaims: Claim[] = [
+/**
+ * Hand-written cases the console walks through: an approved claim, an
+ * unregistered provider, a clean specialist claim and its duplicate.
+ */
+const narrativeClaims: Claim[] = [
   {
     document_id: "CLM-2026-001",
     confidence: 0.96,
@@ -216,7 +220,8 @@ export const seedCareGaps: CareGap[] = [
     risk_level: "High",
     status: "open",
     recommended_cpt: "93306 (Cardiac Ultrasound, R 1,200)",
-    subsidized_cost_zar: 850,
+    cohort_size: 4_180,
+    subsidized_cost_zar: 3_553_000,
   },
   {
     id: "GAP-102",
@@ -229,7 +234,8 @@ export const seedCareGaps: CareGap[] = [
     risk_level: "Medium",
     status: "open",
     recommended_cpt: "92250 (Fundus Photography, R 550)",
-    subsidized_cost_zar: 450,
+    cohort_size: 6_920,
+    subsidized_cost_zar: 3_114_000,
   },
   {
     id: "GAP-103",
@@ -242,7 +248,8 @@ export const seedCareGaps: CareGap[] = [
     risk_level: "High",
     status: "intervention_sent",
     recommended_cpt: "90658 (Influenza Immunisation, R 380)",
-    subsidized_cost_zar: 380,
+    cohort_size: 2_450,
+    subsidized_cost_zar: 931_000,
     intervention_notes: "Proactive benefit authorization dispatched via mobile app notifications on June 11."
   },
   {
@@ -256,6 +263,170 @@ export const seedCareGaps: CareGap[] = [
     risk_level: "Medium",
     status: "open",
     recommended_cpt: "94010 (Spirometry measurement, R 950)",
-    subsidized_cost_zar: 650,
+    cohort_size: 1_870,
+    subsidized_cost_zar: 1_215_500,
+  },
+  {
+    id: "GAP-105",
+    member_id: "DI-9055-05",
+    member_name: "Zola Ndlovu",
+    member_age: 45,
+    chronic_condition: "Hypertension & Type 2 Diabetes",
+    gap_type: "Diabetic retinopathy screening programme",
+    description: "Retinal screening outstanding across the full dual-diagnosis cohort. Costed for a national rollout, so it is deliberately larger than the pool currently holds.",
+    risk_level: "High",
+    status: "open",
+    recommended_cpt: "92250 (Fundus photography, R 550)",
+    cohort_size: 28_400,
+    subsidized_cost_zar: 18_460_000,
   }
 ];
+
+/* -------------------------------------------------------------------------- */
+/* Batch generation                                                           */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The four claims above are hand-written so the console has narrative cases to
+ * walk through. On their own they total under R10,000, which makes every
+ * headline figure read like a toy. A real adjudication queue carries a day's
+ * batch behind those exemplars, so the rest is generated.
+ *
+ * Generated deterministically: the same batch every load, so a demo is
+ * repeatable and the derived totals are stable.
+ */
+
+/** mulberry32 — small deterministic PRNG, so the batch never shifts. */
+function rng(seed: number): () => number {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/**
+ * Claim archetypes with their share of volume and value range. Weighted so the
+ * mix looks like a scheme's book: mostly scripts and primary care by count,
+ * with the value concentrated in the smaller number of in-hospital events.
+ */
+const ARCHETYPES: Array<{
+  share: number; min: number; max: number;
+  cpt: string; icd: string; label: string; icdLabel: string;
+}> = [
+  { share: 0.30, min: 180,   max: 1_400,   cpt: '0001', icd: 'Z76.0', label: 'Chronic medicine script',          icdLabel: 'Repeat prescription' },
+  { share: 0.22, min: 420,   max: 1_150,   cpt: '99213', icd: 'Z00.0', label: 'GP consultation',                 icdLabel: 'General examination' },
+  { share: 0.18, min: 260,   max: 2_200,   cpt: '83036', icd: 'E11.9', label: 'Pathology panel',                 icdLabel: 'Type 2 diabetes mellitus' },
+  { share: 0.14, min: 1_600, max: 4_800,   cpt: '99243', icd: 'I10',   label: 'Specialist consultation',         icdLabel: 'Essential hypertension' },
+  { share: 0.09, min: 1_900, max: 9_500,   cpt: '74160', icd: 'R10.9', label: 'Radiology — CT with contrast',    icdLabel: 'Abdominal pain, unspecified' },
+  { share: 0.05, min: 14_000, max: 68_000, cpt: '47562', icd: 'K80.2', label: 'Day-case surgical procedure',     icdLabel: 'Calculus of gallbladder' },
+  { share: 0.02, min: 48_000, max: 240_000, cpt: '99233', icd: 'J44.9', label: 'In-hospital admission',          icdLabel: 'Chronic obstructive pulmonary disease' },
+];
+
+/**
+ * Savings booked by a rule that passes, as a share of the claim's value.
+ * Flat amounts worked for four hand-written claims but become absurd across a
+ * batch — R150 off a R68,000 procedure is not a tariff saving.
+ */
+const CLINICAL_PATHWAY_SHARE = 0.04; // generic substitution, protocol alignment
+const IN_NETWORK_TARIFF_SHARE = 0.06; // negotiated rate vs billed
+
+/** Outcome mix for a mature adjudication engine. */
+const APPROVED_SHARE = 0.86;
+const REJECTED_SHARE = 0.02; // remainder is flagged for a human
+
+const BATCH_SIZE = 18_000;
+
+function pickArchetype(r: number) {
+  let acc = 0;
+  for (const a of ARCHETYPES) {
+    acc += a.share;
+    if (r <= acc) return a;
+  }
+  return ARCHETYPES[ARCHETYPES.length - 1];
+}
+
+function generateBatch(count: number): Claim[] {
+  const random = rng(20260616);
+  const out: Claim[] = [];
+
+  for (let i = 0; i < count; i += 1) {
+    const archetype = pickArchetype(random());
+    const amount = Math.round(archetype.min + random() * (archetype.max - archetype.min));
+
+    const member = seedMembers[Math.floor(random() * seedMembers.length)];
+    const provider = seedProviders[Math.floor(random() * seedProviders.length)];
+
+    const roll = random();
+    const status: Claim['status'] =
+      roll < APPROVED_SHARE ? 'approved'
+      : roll < APPROVED_SHARE + REJECTED_SHARE ? 'rejected'
+      : 'flagged';
+
+    // Which rule fails decides why a claim left the happy path.
+    const failing = status === 'approved' ? null : random() < 0.45 ? 'V004' : random() < 0.6 ? 'V002' : 'V005';
+
+    const pathwaySaving = Math.round(amount * CLINICAL_PATHWAY_SHARE);
+    const tariffSaving = Math.round(amount * IN_NETWORK_TARIFF_SHARE);
+
+    const day = 10 + Math.floor(random() * 3);
+    const serviceDate = `2026-06-${String(day).padStart(2, '0')}`;
+
+    out.push({
+      document_id: `CLM-2026-B${String(i + 1).padStart(5, '0')}`,
+      confidence: status === 'approved' ? 0.92 + random() * 0.07 : 0.4 + random() * 0.4,
+      status,
+      created_at: `${serviceDate}T${String(6 + Math.floor(random() * 14)).padStart(2, '0')}:00:00Z`,
+      fields: {
+        member,
+        provider,
+        dates: { service_date: serviceDate },
+        amounts: { total_claimed: amount, eligible_tariff: 0, savings_calculated: 0 },
+        icd_10_codes: [{ code: archetype.icd, description: archetype.icdLabel }],
+        cpt_codes: [{ code: archetype.cpt, price: amount, description: archetype.label }],
+      },
+      validation_results: {
+        passed: ['V001', 'V002', 'V003', 'V004', 'V005', 'V006'].filter((id) => id !== failing),
+        failed: failing ? [failing] : [],
+        details: {
+          V001: { passed: true, message: `Member ${member.discovery_member_id} active in the member registry.`, savings: 0 },
+          V002: failing === 'V002'
+            ? { passed: false, message: `Provider practice ${provider.practice_number} suspended pending review.`, savings: 0 }
+            : { passed: true, message: `Provider practice ${provider.practice_number} registered.`, savings: 0 },
+          V003: { passed: true, message: `${archetype.label} consistent with the ${archetype.icdLabel} pathway.`, savings: pathwaySaving },
+          V004: failing === 'V004'
+            ? { passed: false, message: 'Duplicate: same member, provider and service date already submitted.', savings: 0 }
+            : { passed: true, message: 'No duplicate claim found for this member, provider and date.', savings: 0 },
+          V005: failing === 'V005'
+            ? { passed: false, message: 'Out-of-network rate exceeds the contracted tariff.', savings: 0 }
+            : { passed: true, message: 'In-network contract tariff applied.', savings: tariffSaving },
+          V006: { passed: true, message: `Service date ${serviceDate} within the open claim window.`, savings: 0 },
+        },
+      },
+      ...(failing ? { rejection_reason: `${failing} failed on automated adjudication.` } : {}),
+      fhir_claim: {
+        resourceType: 'Claim',
+        id: `CLM-2026-B${String(i + 1).padStart(5, '0')}`,
+        status: status === 'approved' ? 'active' : 'draft',
+        type: { coding: [{ system: 'http://terminology.hl7.org/CodeSystem/claim-type', code: 'professional' }] },
+        patient: { reference: `Patient/${member.discovery_member_id}`, display: member.name },
+        provider: { reference: `Organization/${provider.practice_number}`, display: provider.name },
+        total: { value: amount, currency: 'ZAR' },
+      },
+    });
+  }
+
+  return out;
+}
+
+/** The narrative exemplars, followed by the day's batch behind them. */
+export const seedBatch: Claim[] = generateBatch(BATCH_SIZE);
+
+/**
+ * The ledger as the console sees it: the narrative exemplars first, then the
+ * day's batch. Every headline figure is still derived from these rows by
+ * `computeFinancialSummary` - there is no stored total anywhere.
+ */
+export const seedClaims: Claim[] = [...narrativeClaims, ...seedBatch];

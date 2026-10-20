@@ -15,7 +15,7 @@
  */
 
 import { adjudicate, formatDocumentId } from './adjudication';
-import { computeFinancialSummary, ledgerViolations, withDerivedAmounts } from './ledger';
+import { computeFinancialSummary, ledgerViolations, withDerivedAmounts, workingSet } from './ledger';
 import {
   aiSynthesisSchema,
   careGapTriggerSchema,
@@ -32,7 +32,7 @@ const members = structuredClone(seedMembers);
 const providers = structuredClone(seedProviders);
 const claims: Claim[] = structuredClone(seedClaims);
 const careGaps: CareGap[] = structuredClone(seedCareGaps);
-let claimSequence = claims.length;
+let claimSequence = 0;
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -60,7 +60,8 @@ function snapshot() {
   return {
     members,
     providers,
-    claims: claims.map(withDerivedAmounts),
+    claims: workingSet(claims).map(withDerivedAmounts),
+    claims_total: claims.length,
     careGaps,
     financialSummary: computeFinancialSummary(claims, careGaps),
   };
@@ -181,7 +182,8 @@ async function handle(path: string, method: string, body: unknown): Promise<Resp
     return json({
       success: true,
       alreadyApplied,
-      claims: claims.map(withDerivedAmounts),
+      claims: workingSet(claims).map(withDerivedAmounts),
+      claims_total: claims.length,
       financialSummary: computeFinancialSummary(claims, careGaps),
     });
   }

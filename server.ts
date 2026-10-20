@@ -11,7 +11,7 @@ import { createServer as createViteServer } from 'vite';
 import { ZodError, ZodTypeAny, z } from 'zod';
 
 import { adjudicate, formatDocumentId } from './src/lib/adjudication';
-import { computeFinancialSummary, ledgerViolations, withDerivedAmounts } from './src/lib/ledger';
+import { computeFinancialSummary, ledgerViolations, withDerivedAmounts, workingSet } from './src/lib/ledger';
 import {
   aiSynthesisSchema,
   careGapTriggerSchema,
@@ -43,7 +43,7 @@ const claims: Claim[] = structuredClone(seedClaims);
 const careGaps: CareGap[] = structuredClone(seedCareGaps);
 
 /** Monotonic, never reused - claim IDs must stay unique for the whole run. */
-let claimSequence = claims.length;
+let claimSequence = 0;
 
 /** Restores the ledger to its seeded state. Used by the test suite. */
 export function resetLedger() {
@@ -51,7 +51,7 @@ export function resetLedger() {
   claims.push(...structuredClone(seedClaims));
   careGaps.length = 0;
   careGaps.push(...structuredClone(seedCareGaps));
-  claimSequence = claims.length;
+  claimSequence = 0;
 }
 
 /** Serialises the whole ledger with all derived figures recomputed. */
@@ -59,7 +59,8 @@ function ledgerSnapshot() {
   return {
     members,
     providers,
-    claims: claims.map(withDerivedAmounts),
+    claims: workingSet(claims).map(withDerivedAmounts),
+    claims_total: claims.length,
     careGaps,
     financialSummary: computeFinancialSummary(claims, careGaps),
   };
@@ -144,7 +145,8 @@ app.post('/api/claim/action', (req, res) => {
   res.json({
     success: true,
     alreadyApplied,
-    claims: claims.map(withDerivedAmounts),
+    claims: workingSet(claims).map(withDerivedAmounts),
+    claims_total: claims.length,
     financialSummary: computeFinancialSummary(claims, careGaps),
   });
 });

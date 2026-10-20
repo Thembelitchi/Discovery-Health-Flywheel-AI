@@ -36,9 +36,12 @@ export interface LedgerContext {
   providers: Provider[];
 }
 
-/** `CLM-2026-007`, not `CLM-2026-07` - zero-padded so IDs sort lexically. */
+/**
+ * `CLM-2026-S00007` - zero-padded so ids sort lexically, and in their own `S`
+ * (submitted) namespace so they cannot collide with the generated batch.
+ */
 export function formatDocumentId(sequence: number): string {
-  return `CLM-2026-${String(sequence).padStart(3, '0')}`;
+  return `CLM-2026-S${String(sequence).padStart(5, '0')}`;
 }
 
 /**

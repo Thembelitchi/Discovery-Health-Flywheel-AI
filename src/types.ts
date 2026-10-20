@@ -71,6 +71,9 @@ export interface CareGap {
   risk_level: 'High' | 'Medium' | 'Low';
   status: 'open' | 'intervention_sent' | 'resolved';
   recommended_cpt: string;
+  /** Members in this gap's cohort; the named member is a representative case. */
+  cohort_size: number;
+  /** Cost to fund the whole cohort, not one voucher. */
   subsidized_cost_zar: number;
   intervention_notes?: string;
   resolved_date?: string;

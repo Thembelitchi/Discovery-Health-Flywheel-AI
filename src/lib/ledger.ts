@@ -157,3 +157,17 @@ export function ledgerViolations(claims: Claim[], careGaps: CareGap[]): string[]
 
   return violations;
 }
+
+/**
+ * The slice of the ledger an operator actually works: everything awaiting a
+ * decision, then the most recent settled claims for context.
+ *
+ * The summary is always computed over the WHOLE ledger - this only bounds what
+ * is sent to the client. A day's batch runs to tens of thousands of rows, and
+ * serialising all of them to render a feed nobody scrolls is waste.
+ */
+export function workingSet(claims: Claim[], settledLimit = 25): Claim[] {
+  const flagged = claims.filter((claim) => claim.status === 'flagged');
+  const settled = claims.filter((claim) => claim.status !== 'flagged').slice(0, settledLimit);
+  return [...flagged.slice(0, 40), ...settled];
+}

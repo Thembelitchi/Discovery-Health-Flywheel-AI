@@ -51,10 +51,21 @@ describe('seeded ledger', () => {
     const rowTotal = seedClaims.reduce((t, c) => t + c.fields.amounts.total_claimed, 0);
     expect(summary.total_claims_value_zar).toBe(rowTotal);
 
-    // Only the two approved claims' passed rules are realised savings.
-    expect(summary.realised_admin_savings_zar).toBe(350 + 780);
-    // Nothing is rejected yet, so no leakage has been avoided.
-    expect(summary.avoided_leakage_zar).toBe(0);
+    // Realised savings are the passed-rule savings on approved claims only,
+    // and avoided leakage the gross value of rejected ones. Both derived from
+    // the rows rather than asserted as magic numbers.
+    const expectedRealised = seedClaims
+      .filter((c) => c.status === 'approved')
+      .reduce((t, c) => t + c.validation_results.passed.reduce(
+        (sum, id) => sum + (c.validation_results.details[id]?.savings ?? 0), 0), 0);
+    const expectedAvoided = seedClaims
+      .filter((c) => c.status === 'rejected')
+      .reduce((t, c) => t + c.fields.amounts.total_claimed, 0);
+
+    expect(summary.realised_admin_savings_zar).toBe(expectedRealised);
+    expect(summary.avoided_leakage_zar).toBe(expectedAvoided);
+    // A flagged claim contributes nothing until it is adjudicated.
+    expect(summary.gross_savings_zar).toBe(expectedRealised + expectedAvoided);
   });
 
   it('satisfies every ledger invariant', () => {
@@ -193,16 +204,16 @@ describe('care gap funding', () => {
   });
 
   it('refuses to fund a gap the pool cannot cover', async () => {
-    const gapId = 'GAP-101'; // R850 against a seeded pool of R1,130
-
-    // Drain the pool with a cheaper gap first.
-    await request(app).post('/api/caregaps/trigger').send({ gapId: 'GAP-102' });
-    await request(app).post('/api/caregaps/trigger').send({ gapId: 'GAP-102' });
+    // GAP-105 is costed for a national rollout, deliberately above the pool.
+    const gapId = 'GAP-105';
+    const cost = seedCareGaps.find((g) => g.id === gapId)!.subsidized_cost_zar;
+    expect(cost).toBeGreaterThan(await pool());
 
     await request(app).post('/api/caregaps/trigger').send({ gapId }).expect(200);
     const { body } = await request(app).post('/api/caregaps/trigger').send({ gapId }).expect(409);
 
     expect(body.error).toMatch(/Insufficient funds/);
+    expect(body.required_zar).toBe(cost);
     expect(await pool()).toBeGreaterThanOrEqual(0);
   });
 
@@ -225,7 +236,7 @@ describe('document ids', () => {
         .post('/api/claim/upload')
         .send({ ...CLEAN_SUBMISSION, serviceDate: `2026-07-${String(i + 1).padStart(2, '0')}` })
         .expect(201);
-      expect(body.claim.document_id).toMatch(/^CLM-2026-\d{3}$/);
+      expect(body.claim.document_id).toMatch(/^CLM-2026-S\d{5}$/);
       expect(seen.has(body.claim.document_id)).toBe(false);
       seen.add(body.claim.document_id);
     }
@@ -253,9 +264,25 @@ describe('invariants hold under arbitrary sequences', () => {
     const { body } = await request(app).get('/api/data').expect(200);
     const s = body.financialSummary;
 
-    expect(ledgerViolations(body.claims, body.careGaps)).toEqual([]);
     expect(s.gross_savings_zar).toBe(s.realised_admin_savings_zar + s.avoided_leakage_zar);
     expect(s.savings_reinvestment_pool_zar).toBe(s.gross_savings_zar - s.preventative_outlay_zar);
-    expect(computeFinancialSummary(body.claims, body.careGaps)).toEqual(s);
+    expect(s.auto_approved_count + s.flagged_review_count + s.rejected_count).toBe(s.total_claims_count);
+    expect(Number.isFinite(s.savings_reinvestment_pool_zar)).toBe(true);
+    expect(s.savings_reinvestment_pool_zar).toBeGreaterThanOrEqual(0);
+  });
+
+  it('serves a bounded working set while summarising the whole ledger', async () => {
+    const { body } = await request(app).get('/api/data').expect(200);
+
+    // The feed is capped; the summary is not. Recomputing from the subset is
+    // therefore expected to differ - that is the contract, not a defect.
+    expect(body.claims_total).toBe(seedClaims.length);
+    expect(body.claims.length).toBeLessThan(body.claims_total);
+    expect(body.financialSummary.total_claims_count).toBe(body.claims_total);
+
+    // Everything awaiting a decision that fits the cap is present, newest first.
+    expect(body.claims.some((c: { status: string }) => c.status === 'flagged')).toBe(true);
+    expect(computeFinancialSummary(body.claims, body.careGaps).total_claims_count)
+      .not.toBe(body.financialSummary.total_claims_count);
   });
 });

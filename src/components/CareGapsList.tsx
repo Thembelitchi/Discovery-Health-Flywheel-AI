@@ -85,7 +85,7 @@ export default function CareGapsList({ careGaps, savingsPool, onTriggerGap }: Pr
                   </div>
                   <div className="flex justify-between border-t border-white/5 pt-1 mt-1 font-bold text-white/60 uppercase">
                     <span>Proactive subsidy cost</span>
-                    <span className="text-flywheel font-bold text-xs">R {gap.subsidized_cost_zar}</span>
+                    <span className="text-flywheel font-bold text-xs">R {gap.subsidized_cost_zar.toLocaleString()} <span className="text-white/40 font-normal">/ {gap.cohort_size.toLocaleString()} members</span></span>
                   </div>
                 </div>
 
@@ -123,7 +123,7 @@ export default function CareGapsList({ careGaps, savingsPool, onTriggerGap }: Pr
                     </button>
                     {!canFund && (
                       <div className="text-[9px] text-red-400 flex items-center justify-center gap-1 font-mono uppercase">
-                        <AlertTriangle size={8} /> Insufficient funds (Cost R{gap.subsidized_cost_zar} &gt; Pool R{savingsPool})
+                        <AlertTriangle size={8} /> Insufficient funds (Cost R{gap.subsidized_cost_zar.toLocaleString()} &gt; Pool R{savingsPool.toLocaleString()})
                       </div>
                     )}
                   </div>
