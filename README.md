@@ -118,32 +118,45 @@ Override the model with `GEMINI_MODEL` (default `gemini-2.5-flash`).
 
 [`src/components/ExecutiveRoiCalculator.tsx`](src/components/ExecutiveRoiCalculator.tsx)
 is an **illustrative benefit case**, not a measurement. It states everything
-annually, exposes all twelve assumptions in an in-app panel with a note on how
-well-founded each one is, and shows three scenarios rather than a single
-number:
+annually, tags every input in an in-app panel as either a published figure or
+an assumption, and shows three scenarios rather than a single number:
 
 | Scenario | Benefit | Cost | Return |
 |---|---|---|---|
-| Conservative | R 248.5m | R 177.4m | **~1.40x** |
-| Base case | R 414.1m | R 136.5m | **~3.03x** |
-| Optimistic | R 538.3m | R 122.8m | **~4.38x** |
+| Conservative | R 293.2m | R 212.6m | **~1.38x** |
+| Base case | R 488.8m | R 163.5m | **~2.99x** |
+| Optimistic | R 635.4m | R 147.2m | **~4.32x** |
 
-The model is sized to a scheme of Discovery's order of magnitude: 75M claims a
-year at an average of R950, i.e. roughly **R71bn of claims paid**. Base-case
-benefit is **0.58% of that** — the case does not depend on capturing a large
-share of scheme spend.
+Base-case benefit is **0.55% of claims paid** — the case does not depend on
+capturing a large share of scheme spend.
 
-The return rests mostly on two inputs, both exposed as sliders: incremental FWA
-recovery (default 0.30% of claims paid, against an estimated 3–10% of spend lost
-to fraud, waste and abuse) and the share of admissions genuinely avoidable. Move
-those two first.
+### What is published, and what is assumed
 
-> **Calibration is a planning estimate, not a citation.** Claim volume, average
-> claim value, chronic-registration prevalence and average admission cost were
-> sized from general knowledge of the South African private healthcare market.
-> They should be replaced with figures from the scheme's own published accounts
-> before this model informs a funding decision. Every one is marked in the
-> in-app assumptions panel.
+Five inputs are Discovery Health Medical Scheme's own 2025 figures, reported at
+its June 2026 AGM:
+
+| Input | Value |
+|---|---|
+| Claims processed | 64 million |
+| Claims paid | R89.4bn |
+| Average claim value | R1,397 (derived: paid ÷ processed) |
+| Beneficiaries | 2,725,122 at 31 Dec 2025 |
+| Chronic cohort | over 1,000,000 beneficiaries |
+| Average cost per hospital admission | R74,613 |
+
+A sixth anchor is older and wider in scope: Discovery Health reported **R555m of
+fraud, waste and abuse recovered across its client schemes in 2018**. The
+recovery slider therefore models an *incremental* uplift on an established
+forensic programme (default 0.15%), not the programme itself.
+
+The remaining inputs — manual review share, cost per manual review, intervention
+cost, admission rate in the cohort, share of admissions avoidable, and the four
+programme cost lines — are **assumptions that still need an owner**. The in-app
+panel tags every input `Published` or `Assumed` so the distinction is visible
+while the model is being argued over.
+
+The single most uncertain input is the share of admissions genuinely avoidable.
+The return moves more on that than on anything else.
 
 ---
 

@@ -24,14 +24,41 @@ const ANNUAL_COSTS = {
   programmeManagementAndAssurance: 12_000_000,
 } as const;
 
-/** Unit economics held constant; the sliders drive the rest. */
+/**
+ * Figures published by Discovery Health Medical Scheme for 2025, reported at
+ * its June 2026 AGM. These are not estimates and should not be edited without
+ * a newer source.
+ *
+ *   claims paid        R89.4bn
+ *   claims processed   64 million      -> average claim value R1,397
+ *   beneficiaries      2,725,122
+ *   chronic cohort     over 1,000,000 beneficiaries (2025 AGM presentation)
+ *   hospital admission R74,613 average
+ *
+ * One further anchor, older and wider in scope: Discovery Health reported
+ * R555m of fraud, waste and abuse recovered across its client schemes in 2018.
+ * The recovery slider therefore models an INCREMENTAL uplift on an established
+ * forensic programme, not the programme itself.
+ */
+const PUBLISHED = {
+  claimsPaidZar: 89_400_000_000,
+  claimsProcessed: 64_000_000,
+  beneficiaries: 2_725_122,
+  chronicCohort: 1_000_000,
+  averageAdmissionZar: 74_613,
+  fwaRecoveredZar2018: 555_000_000,
+} as const;
+
+/** Derived from published totals rather than assumed. */
+const AVERAGE_CLAIM_VALUE = Math.round(PUBLISHED.claimsPaidZar / PUBLISHED.claimsProcessed);
+const HIGH_RISK_MEMBERS = PUBLISHED.chronicCohort;
+
+/** Unit economics still assumed; the sliders drive the rest. */
 const AUTO_ADJUDICATION_COST_PER_CLAIM = 6;
-const AVERAGE_CLAIM_VALUE = 950;
-const HIGH_RISK_MEMBERS = 600_000;
 const INTERVENTION_COST_PER_MEMBER = 450;
 const HIGH_RISK_ADMISSION_RATE = 0.18;
 const ADMISSIONS_AVOIDED_SHARE = 0.12;
-const AVOIDED_ADMISSION_COST = 35_000;
+const AVOIDED_ADMISSION_COST = PUBLISHED.averageAdmissionZar;
 
 /**
  * Downside and upside bands. A single point estimate hides the fact that the
@@ -49,13 +76,13 @@ const zar = (value: number) => `R ${Math.round(value).toLocaleString('en-ZA')}`;
 const millions = (value: number) => `R ${(value / 1_000_000).toFixed(1)}m`;
 
 export default function ExecutiveRoiCalculator() {
-  const [annualClaims, setAnnualClaims] = useState(75_000_000);
+  const [annualClaims, setAnnualClaims] = useState<number>(PUBLISHED.claimsProcessed);
   const [manualReviewShare, setManualReviewShare] = useState(12);
   const [automationUplift, setAutomationUplift] = useState(30);
   const [manualReviewCost, setManualReviewCost] = useState(55);
   const [careGapClosure, setCareGapClosure] = useState(15);
   // Recovery is the most arguable input, so it is a dial rather than a constant.
-  const [recoveryRate, setRecoveryRate] = useState(0.3);
+  const [recoveryRate, setRecoveryRate] = useState(0.15);
   const [scenario, setScenario] = useState<ScenarioKey>('base');
   const [showAssumptions, setShowAssumptions] = useState(false);
 
@@ -98,20 +125,32 @@ export default function ExecutiveRoiCalculator() {
     { name: 'Admissions avoided', value: Math.round(preventionBenefit * benefitFactor) },
   ];
 
-  const assumptions: Array<{ label: string; value: string; basis: string }> = [
-    { label: 'Average claim value', value: zar(AVERAGE_CLAIM_VALUE), basis: 'Sized so volume x value approximates scheme claims paid - replace with actual' },
-    { label: 'Cost to auto-adjudicate', value: `${zar(AUTO_ADJUDICATION_COST_PER_CLAIM)} / claim`, basis: 'Planning assumption' },
-    { label: 'Incremental FWA recovery', value: `${recoveryRate.toFixed(2)}% of claims paid`, basis: 'Slider. Against 3-10% estimated leakage this is a small uplift' },
-    { label: 'High-risk cohort', value: `${HIGH_RISK_MEMBERS.toLocaleString('en-ZA')} lives`, basis: 'Approx. chronic-registration prevalence - replace with CDL actual' },
-    { label: 'Intervention cost', value: `${zar(INTERVENTION_COST_PER_MEMBER)} / member / year`, basis: 'Blended; consistent with the R380-R850 care gaps in this console' },
-    { label: 'Admission rate in cohort', value: `${(HIGH_RISK_ADMISSION_RATE * 100).toFixed(0)}%`, basis: 'Planning assumption - needs actuarial input' },
-    { label: 'Share of admissions avoidable', value: `${(ADMISSIONS_AVOIDED_SHARE * 100).toFixed(0)}%`, basis: 'Most uncertain input in the model' },
-    { label: 'Cost per avoided admission', value: zar(AVOIDED_ADMISSION_COST), basis: 'SA private medical admission - replace with scheme actual' },
-    { label: 'Platform & infrastructure', value: `${millions(ANNUAL_COSTS.platformInfrastructure)} / year`, basis: 'Programme budget estimate' },
-    { label: 'Data science & ML engineering', value: `${millions(ANNUAL_COSTS.dataScienceAndMlEngineering)} / year`, basis: 'Programme budget estimate' },
-    { label: 'Integration & change management', value: `${millions(ANNUAL_COSTS.integrationAndChangeManagement)} / year`, basis: 'Year-one weighted' },
-    { label: 'Programme management & assurance', value: `${millions(ANNUAL_COSTS.programmeManagementAndAssurance)} / year`, basis: 'Programme budget estimate' },
+  /**
+   * Every figure the model rests on, and where it comes from. `published`
+   * means it is a reported Discovery Health Medical Scheme figure; everything
+   * else is an assumption someone still has to own.
+   */
+  const assumptions: Array<{ label: string; value: string; basis: string; published?: boolean }> = [
+    { label: 'Annual claims processed', value: `${(PUBLISHED.claimsProcessed / 1_000_000).toFixed(0)}M`, basis: 'DHMS 2025, reported at the June 2026 AGM', published: true },
+    { label: 'Annual claims paid', value: `R ${(PUBLISHED.claimsPaidZar / 1e9).toFixed(1)}bn`, basis: 'DHMS 2025, reported at the June 2026 AGM', published: true },
+    { label: 'Average claim value', value: zar(AVERAGE_CLAIM_VALUE), basis: 'Derived: claims paid / claims processed', published: true },
+    { label: 'Beneficiaries', value: PUBLISHED.beneficiaries.toLocaleString('en-ZA'), basis: 'DHMS at 31 December 2025', published: true },
+    { label: 'Chronic cohort', value: `${HIGH_RISK_MEMBERS.toLocaleString('en-ZA')} lives`, basis: 'DHMS 2025 AGM: over 1 million members live with a chronic condition', published: true },
+    { label: 'Cost per avoided admission', value: zar(AVOIDED_ADMISSION_COST), basis: 'DHMS 2025 average cost per hospital admission', published: true },
+    { label: 'Incremental FWA recovery', value: `${recoveryRate.toFixed(2)}% of claims paid`, basis: `Slider. Uplift on an existing programme that recovered ${millions(PUBLISHED.fwaRecoveredZar2018)} across client schemes in 2018` },
+    { label: 'Claims manually reviewed today', value: `${manualReviewShare}%`, basis: 'Assumption - not published; ask claims operations' },
+    { label: 'Manual review cost / claim', value: zar(manualReviewCost), basis: 'Assumption - blended assessor cost' },
+    { label: 'Cost to auto-adjudicate', value: `${zar(AUTO_ADJUDICATION_COST_PER_CLAIM)} / claim`, basis: 'Assumption' },
+    { label: 'Intervention cost', value: `${zar(INTERVENTION_COST_PER_MEMBER)} / member / year`, basis: 'Assumption - blended across the care gaps in this console' },
+    { label: 'Admission rate in cohort', value: `${(HIGH_RISK_ADMISSION_RATE * 100).toFixed(0)}%`, basis: 'Assumption - needs actuarial input' },
+    { label: 'Share of admissions avoidable', value: `${(ADMISSIONS_AVOIDED_SHARE * 100).toFixed(0)}%`, basis: 'Assumption - the most uncertain input in the model' },
+    { label: 'Platform & infrastructure', value: `${millions(ANNUAL_COSTS.platformInfrastructure)} / year`, basis: 'Assumption - programme budget' },
+    { label: 'Data science & ML engineering', value: `${millions(ANNUAL_COSTS.dataScienceAndMlEngineering)} / year`, basis: 'Assumption - programme budget' },
+    { label: 'Integration & change management', value: `${millions(ANNUAL_COSTS.integrationAndChangeManagement)} / year`, basis: 'Assumption - year-one weighted' },
+    { label: 'Programme management & assurance', value: `${millions(ANNUAL_COSTS.programmeManagementAndAssurance)} / year`, basis: 'Assumption - programme budget' },
   ];
+
+  const publishedCount = assumptions.filter((a) => a.published).length;
 
   return (
     <div className="border border-white/10 bg-[#121212] p-6 space-y-8" id="roi-calculator-container">
@@ -132,9 +171,11 @@ export default function ExecutiveRoiCalculator() {
       <div className="p-3 border border-orange-400/30 bg-orange-400/5 text-[11px] text-orange-200/80 leading-relaxed flex gap-2">
         <Info size={13} className="flex-shrink-0 mt-0.5" />
         <span>
-          Every input below is a <strong>planning assumption</strong>, not a measurement. Figures are
-          annual. Before this model supports a funding decision, each assumption needs an owner and a
-          source &mdash; open the assumptions panel to see which are least validated.
+          Claim volume, claims paid, beneficiaries, the chronic cohort and the average admission cost
+          are <strong>Discovery Health Medical Scheme figures for 2025</strong>, reported at the June
+          2026 AGM. The operational inputs &mdash; manual review share, intervention cost, avoidable
+          admission share &mdash; are still <strong>assumptions</strong> and need an owner. Open the
+          panel below: each input says which it is. Figures are annual.
         </span>
       </div>
 
@@ -149,7 +190,7 @@ export default function ExecutiveRoiCalculator() {
             label="Annual claims volume"
             display={`${(annualClaims / 1_000_000).toFixed(0)}M / year`}
             min={20_000_000}
-            max={200_000_000}
+            max={150_000_000}
             step={1_000_000}
             value={annualClaims}
             onChange={setAnnualClaims}
@@ -313,14 +354,25 @@ export default function ExecutiveRoiCalculator() {
             onClick={() => setShowAssumptions((open) => !open)}
             className="text-[10px] font-black uppercase tracking-widest border border-white/15 text-white/70 px-3 py-2 hover:border-flywheel hover:text-flywheel transition-all"
           >
-            {showAssumptions ? 'Hide' : 'Show'} all {assumptions.length} assumptions
+            {showAssumptions ? 'Hide' : 'Show'} all {assumptions.length} inputs &mdash; {publishedCount} published, {assumptions.length - publishedCount} assumed
           </button>
 
           {showAssumptions && (
             <div className="border border-white/10 bg-black/40 divide-y divide-white/5" id="roi-assumptions-panel">
               {assumptions.map((a) => (
                 <div key={a.label} className="p-3 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4">
-                  <span className="text-[10px] text-white/70 font-bold flex-1">{a.label}</span>
+                  <span className="text-[10px] text-white/70 font-bold flex-1 flex items-center gap-2">
+                    <span
+                      className={`px-1.5 py-0.5 text-[8px] font-mono tracking-wider uppercase flex-shrink-0 ${
+                        a.published
+                          ? 'bg-flywheel/15 text-flywheel'
+                          : 'bg-orange-400/15 text-orange-300'
+                      }`}
+                    >
+                      {a.published ? 'Published' : 'Assumed'}
+                    </span>
+                    {a.label}
+                  </span>
                   <span className="text-[10px] text-white font-mono">{a.value}</span>
                   <span className="text-[9px] text-white/35 uppercase tracking-wider flex-1 sm:text-right">
                     {a.basis}
