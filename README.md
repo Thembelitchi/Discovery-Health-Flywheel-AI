@@ -1,100 +1,231 @@
-# Discovery Health Flywheel 🚀
+# Discovery Health Flywheel — interactive prototype
 
-[![Repository](https://img.shields.io/badge/GitHub-Repository-blue?logo=github&style=flat-square)](https://github.com/thembelitchi/discovery-health-flywheel)
-[![Languages](https://img.shields.io/badge/Stack-Python%20%7C%20TypeScript%20%7C%20Scala-success?style=flat-square)](#technology-stack)
-[![Platforms](https://img.shields.io/badge/Platforms-Neo4j%20%7C%20Kafka%20%7C%20Cloudera%20CDP%20%7C%20GCP%20Vertex%20AI-orange?style=flat-square)](#technology-stack)
-[![Compliance](https://img.shields.io/badge/Compliance-POPIA%20%7C%20SARR%20%7C%20HIPAA-red?style=flat-square)](#governance--compliance)
+A single-process demo of a **closed-loop claims flywheel**: savings captured when a
+claim is adjudicated are credited to a reinvestment pool, and that pool funds
+preventative care interventions for members with open care gaps.
 
-An enterprise-grade, full-stack predictive health platform designed for **Discovery Health South Africa** (holding 58% market share). The platform establishes a **closed-loop self-funding reinvestment layer**: every Rand saved from back-office administrative waste and fraud detection is programmatically written to a secure ledger, immediately unlocking intervention budget tokens to subsidize and dispatch proactive, preventive care-gap vouchers (e.g. cardiac screenings, pediatric clinics, and chronic medicine adherence nudges) for high-risk cohorts.
-
----
-
-## 🔗 Original Repository
-Access the production repository and deployment modules here:
-👉 **[thembelitchi/discovery-health-flywheel](https://github.com/thembelitchi/discovery-health-flywheel)**
+> **This is a prototype, not a platform.** It is one Express process with an
+> in-memory ledger and a React console on top. It has no database, no
+> authentication, and no connection to any real claims system. Every member,
+> provider and claim in it is synthetic. Read [Scope and limitations](#scope-and-limitations)
+> before showing it to anyone who might mistake it for a running system.
 
 ---
 
-## 🛠️ Technology Stack & Platforms
-
-The system leverages Discovery's existing enterprise investments, needing no rip-and-replace infrastructure:
-
-| Platform / Layer | Core Technology | Primary Language | Function |
-| :--- | :--- | :--- | :--- |
-| **Graph Analytics** | **Neo4j Enterprise** | Cipher / Cypher Query | Complex Fraud Ring Mapping & Collusion Analysis |
-| **Pipeline/Ingestion**| **Apache Kafka** | Python / Java | Low-latency stream ingestion from SAP S/4HANA & mobile |
-| **Data Lakehouse** | **Cloudera CDP / Apache Iceberg** | PySpark / SQL | ACID transactions, time-travel auditing, and storage |
-| **Model Serving** | **GCP Vertex AI** | Python (TensorFlow, PyTorch)| Multimodal diagnostic predictions and NLP document extracts |
-| **Enterprise ERP** | **SAP S/4HANA** | ABAP / OData REST APIs | Claims adjudication, provider payments, financial general ledger |
-| **Compliance Layer** | **Cloudera SDX (Shared Data Experience)** | Python | Policy enforcement, schema cataloging, and POPIA token shield |
-| **Interactive Console**| **React 19, Vite, Express** | TypeScript | High-impact executive ROI modeling, live telemetry preview |
-
----
-
-## 🧠 Data Science & Machine Learning Engineering
-
-The core value of the Flywheel lies in modern, highly specialized AI and actuarial algorithms built upon **Python**, **Neo4j**, and **PySpark**:
-
-### 1. Collusion Network & Fraud Detection (Neo4j & PySpark GraphX)
-*   **The Challenge**: Static rule engines fail to capture multi-provider phantom clinic networks, upcoding schemes, and identity-sharing fraud.
-*   **The Solution**: A bipartite graph linking `(Provider) -[:CLAIMS_TRANS]-> (Member) -[:FILLED_AT]-> (Pharmacy)`.
-*   **Algorithm Matrix**:
-    *   **PageRank / ArticleRank**: Identifies high-influence node coordinates acting as central hubs for systematic claims multiplication.
-    *   **Louvain Community Detection**: Uncovers dense, isolated sub-communities indicating collusion rings.
-    *   **Cosine Similarity & Jaccard Index**: Detects high-repetition duplicate claims billing profiles occurring across disparate facilities on identical timestamps.
-    *   **GNN Embeddings**: GraphSAGE-based Node Embeddings are exported into Vertex AI representing fraud-likelihood patterns within milliseconds of streaming Kafka ingestion.
-
-### 2. Chronic Disease Medication Adherence Model (Python, XGBoost, Lifelines)
-*   **The Challenge**: Identifying chronic disease members (CDL registry) at active risk of dropping off medication prior to hospitalization events.
-*   **The Solution**: An event-based survival model trained on multi-temporal pharmacy claims.
-*   **Algorithms & Libraries**:
-    *   **Cox Proportional Hazards**: Models survival timelines according to dynamic covarities (demographics, co-morbidities, claims velocity).
-    *   **Gradient Boosted Decision Trees (XGBoost/LightGBM)**: Predicts absolute probability of a non-adherence event occurring within the upcoming 30 days. Triggers real-time interactive WhatsApp nudges before the critical window closes.
-
-### 3. Geospatial Resource Allocation Optimization (Python, Google BigQuery GIS, PuLP)
-*   **The Challenge**: Maximizing the clinical impact per South African Rand (ZAR) invested to dispatch mobile clinic vans across underrepresented districts.
-*   **The Solution**: A multi-criteria Linear Programming optimization solver.
-*   **Variables**:
-    *   Minimize travel cost matrices while maximizing high-risk Care Gap density closure indicators.
-    *   Solved via **PuLP COIN-OR** integer linear programming (MIP) executed regularly on BigQuery GIS geospatial grids.
-
----
-
-## 🏛️ Governance & Compliance (POPIA/HIPAA compliant)
-
-*   **POPIA Compliant Token Shield**: Personal health identifiers (Member IDs, DOBs, physical addresses) are encrypted via **SHA-256 tokenization** inside Cloudera SDX before ingestion into downstream modeling environments.
-*   **mTLS Secure Handshakes**: Data synchronization between on-prem Cloudera Spark stream processors and Google Cloud Vertex AI instances operates over encrypted mutual TLS tunnels.
-*   **Council for Medical Schemes Auditing**: Custom Apache Iceberg time-travel logs record database schemas and auto-adjudicated ledger transactions, creating absolute operational transparency.
-
----
-
-## 🚀 90-Day MVP Roadmap
-
-```
-  Month 1: Foundation          Month 2: Claims Pilot         Month 3: Care Gaps Scale
-[ Unified Member Graph ] ---> [ GCP Document AI Auto-adj ] ---> [ Mobile Clinic Targeting ]
-[ Kafka Ingestion Stream ] ---> [ GraphX Fraud Network ]   ---> [ WhatsApp Adherence Nudges ]
-```
-
-1.  **Month 1 (Foundation)**: Establish Kafka pipelines connected to SAP OData APIs; persist data in Apache Iceberg tables monitored through Cloudera SDX.
-2.  **Month 2 (Agentic Claims Pilot)**: Deploy GCP Document AI algorithms for invoice/prescription extraction, dropping claims review latency from 72 hours down to 4 hours.
-3.  **Month 3 (Care Gaps scale)**: Funnel freed audit capital directly into proactive care gap vouchers, launching mobile diabetes & cardio-screening clinics.
-
----
-
-## 📦 Repository Structure
-
-The core codebase is organized as follows:
+## Quick start
 
 ```bash
-├── connectors/            # SAP OData to Apache Kafka ingestion sinks
-├── spark-pipelines/       # PySpark Structured Streaming and GraphX jobs (Python)
-├── api-gateway/           # FastAPI-based secure POPIA tokenization & authorization shield
-├── deploy/                # Kubernetes manifests for Cloudera CDP Stackable operators
-├── src/                   # React 19 visual interactive mock application (TypeScript)
-│   ├── components/        # Specialized dashboards, GNN visualizer, and FAQ Knowledge Hub
-│   └── App.tsx            # Main visual orchestration console
-└── server.ts              # Live Express micro-backend with local fallback intelligence
+npm ci        # exact, reproducible install
+npm run dev   # http://localhost:3000
 ```
 
-*Architected in June 2026 for Discovery Health South Africa.*
+Then:
+
+```bash
+npm test        # regression suite (20 tests)
+npm run build   # typecheck, then bundle client + server
+npm start       # serve the production build
+```
+
+No environment variables are required. Copy `.env.example` to `.env` if you want
+to point the AI synthesis endpoint at a real model.
+
+---
+
+## How the flywheel actually computes
+
+This is the part worth reviewing, because it is where a demo of this shape
+usually goes wrong.
+
+**Nothing is accumulated.** There is no running total anywhere in the codebase.
+Every figure on the dashboard is derived from the claim and care-gap rows on
+each read by `computeFinancialSummary` in [`src/lib/ledger.ts`](src/lib/ledger.ts).
+Replaying a request, double-clicking a button, or restarting the process cannot
+change the answer.
+
+Two kinds of money are tracked **separately**, because conflating them
+overstates the benefit:
+
+| | Meaning | Booked when |
+|---|---|---|
+| **Realised admin savings** | Cash not spent on a claim we *did* pay, because a rule reduced what was payable | Claim reaches `approved` |
+| **Avoided leakage** | Gross value of a claim we declined to pay at all | Claim reaches `rejected` |
+
+```
+gross savings = realised admin savings + avoided leakage
+pool          = gross savings − preventative outlay
+```
+
+A claim sitting in the review queue (`flagged`) is worth **R0**. That is what
+stops a caller from inflating the pool by submitting the same duplicate over
+and over: each submission creates another flagged row worth nothing until a
+human adjudicates it.
+
+`/api/data` asserts these invariants on every read via `ledgerViolations` and
+returns **500** rather than serving a number that does not balance.
+
+### Adjudication rules
+
+[`src/lib/adjudication.ts`](src/lib/adjudication.ts) is pure — same input and
+same ledger state always produce the same claim, and it books no money itself.
+
+| Rule | Check | Saving when it passes |
+|---|---|---|
+| V001 | Member is in the registry | — |
+| V002 | Provider practice is registered | — |
+| V003 | Procedure code matches the diagnosis pathway | R150 |
+| V004 | Not a duplicate (same member, provider, service date) | — |
+| V005 | In-network contracted tariff applies | R200 |
+| V006 | Service date is within the claim window | — |
+
+A claim auto-approves only when every rule passes *and* extraction confidence
+clears 0.8. Anything else goes to a human.
+
+---
+
+## API
+
+Every `POST` body is parsed with a [Zod](https://zod.dev) schema
+([`src/lib/schemas.ts`](src/lib/schemas.ts)) and returns `400` with field-level
+issues when it fails. Unknown identifiers return `404`.
+
+| Method | Route | Notes |
+|---|---|---|
+| `GET` | `/api/data` | Whole ledger with derived totals; `500` if invariants break |
+| `POST` | `/api/claim/upload` | Runs V001–V006; `201` with the adjudicated claim |
+| `POST` | `/api/claim/action` | `approve` / `reject`; idempotent, reports `alreadyApplied` |
+| `POST` | `/api/caregaps/trigger` | `open → intervention_sent → resolved`; `409` if the pool is short |
+| `POST` | `/api/ai/synthesis` | Returns `source: "live" \| "cached"` — see below |
+
+### AI synthesis
+
+`/api/ai/synthesis` calls Gemini when `GEMINI_API_KEY` is set, and serves a
+static narrative otherwise. The response **always** declares which one you got:
+
+```json
+{ "text": "...", "source": "cached", "reason": "GEMINI_API_KEY is not configured", "model": null }
+```
+
+The console renders a badge from that field. A fallback that is
+indistinguishable from live output is how a demo ends up reporting numbers
+nobody generated.
+
+Override the model with `GEMINI_MODEL` (default `gemini-2.5-flash`).
+
+---
+
+## The ROI model
+
+[`src/components/ExecutiveRoiCalculator.tsx`](src/components/ExecutiveRoiCalculator.tsx)
+is an **illustrative benefit case**, not a measurement. It states everything
+annually, tags every input in an in-app panel as either a published figure or
+an assumption, and shows three scenarios rather than a single number:
+
+| Scenario | Benefit | Cost | Return |
+|---|---|---|---|
+| Conservative | R 266.4m | R 212.6m | **~1.25x** |
+| Base case | R 444.0m | R 163.5m | **~2.72x** |
+| Optimistic | R 577.3m | R 147.2m | **~3.92x** |
+
+Base-case benefit is **0.50% of claims paid** — the case does not depend on
+capturing a large share of scheme spend.
+
+### What is published, and what is assumed
+
+Five inputs are Discovery Health Medical Scheme's own 2025 figures, reported at
+its June 2026 AGM:
+
+| Input | Value |
+|---|---|
+| Claims processed | 64 million |
+| Claims paid | R89.4bn |
+| Average claim value | R1,397 (derived: paid ÷ processed) |
+| Beneficiaries | 2,725,122 at 31 Dec 2025 |
+| Chronic cohort | over 1,000,000 beneficiaries |
+| Average cost per hospital admission | R74,613 |
+
+### Recovery: incremental only
+
+Discovery Health said in **April 2024** that its forensic programme recovers
+**"around R500-million per year"**, which it described as *"about 1% of our
+healthcare claims costs"*, and cited a global estimate that **3–10% of
+healthcare spend** is lost to fraud, waste and abuse. The Council for Medical
+Schemes puts industry-wide losses at **up to R28bn a year**.
+
+Two caveats keep the slider conservative:
+
+- That R500m is **across all 19 schemes Discovery administers**, not DHMS alone,
+  so the DHMS share is smaller.
+- R500m against R89.4bn of DHMS claims is **0.56%, not the 1% quoted** — the
+  percentage is stated against a different base. Both figures are reported here
+  rather than reconciled, because the discrepancy is the reviewer's to resolve.
+
+The slider therefore models an *incremental* uplift on an already-running
+programme — default **0.10%** of claims paid (~R89m) — and never claims that
+programme's existing yield as new benefit.
+
+The remaining inputs — manual review share, cost per manual review, intervention
+cost, admission rate in the cohort, share of admissions avoidable, and the four
+programme cost lines — are **assumptions that still need an owner**. The in-app
+panel tags every input `Published` or `Assumed` so the distinction is visible
+while the model is being argued over.
+
+The single most uncertain input is the share of admissions genuinely avoidable.
+The return moves more on that than on anything else.
+
+---
+
+## Repository layout
+
+```
+server.ts                  Express app: routes, validation, static serving
+src/
+  App.tsx                  Console shell and tab routing
+  types.ts                 Shared domain types
+  components/              Dashboard, claims feed, care gaps, ROI, POPIA view
+  lib/
+    ledger.ts              Derived financials + invariants
+    adjudication.ts        Rules V001–V006 (pure)
+    schemas.ts             Zod request schemas
+    seed.ts                Synthetic fixtures
+    ledger.test.ts         Regression suite
+.github/workflows/ci.yml   npm ci → typecheck → test → build
+```
+
+---
+
+## Scope and limitations
+
+Known and deliberate, listed so nobody has to discover them in a demo:
+
+- **No persistence.** The ledger is process-local and resets on restart. Every
+  visitor to a deployed instance shares and can mutate the same one.
+- **No authentication.** Every endpoint is open. Anyone who can reach the
+  server can adjudicate claims and dispatch vouchers.
+- **No audit log.** State transitions record no actor and no timestamp, so the
+  time-travel audit story this concept depends on is not implemented.
+- **The POPIA view is illustrative.** It demonstrates a tokenisation *concept*
+  with synthetic values. It performs no real tokenisation and the identifiers
+  shown are fabricated.
+- **The fraud graph is static.** It renders fixed scenarios. No graph algorithm
+  runs.
+- **Simulation mode overwrites the live ledger.** The 90-day roadmap wizard
+  replaces dashboard figures with projections. A banner marks this; the figures
+  are planning projections, not measurements.
+- **No integrations.** Nothing connects to a claims system, data lake, stream,
+  or model-serving platform.
+
+## Next milestones
+
+In the order they unblock the most:
+
+1. Persist the ledger behind an append-only event table; make the summary a view over it.
+2. Authentication and per-session ledgers, so a shared deployment is usable.
+3. HTTP-level authorisation plus rate limiting.
+4. One real document-extraction slice on a scanned claim, replacing the mock upload path.
+5. Replace ROI planning assumptions with scheme actuals, assumption by assumption.
+
+---
+
+*Synthetic data only. Not affiliated with, endorsed by, or connected to any
+live Discovery Health system.*

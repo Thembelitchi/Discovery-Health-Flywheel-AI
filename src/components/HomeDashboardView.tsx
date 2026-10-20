@@ -1,7 +1,6 @@
-import React from 'react';
 import { 
   Activity, HeartPulse, Coins, ShieldAlert, Lock, PlayCircle, 
-  ArrowRight, ShieldCheck, Terminal, HelpCircle, FileText, CheckCircle2 
+  ArrowRight, ShieldCheck, Terminal, HelpCircle 
 } from 'lucide-react';
 import { FinancialSummary } from '../types';
 
@@ -89,7 +88,7 @@ export default function HomeDashboardView({ summary, onNavigate, onOpenFAQ }: Pr
 
         <div className="space-y-4 max-w-xl z-10">
           <div className="inline-flex items-center gap-2 px-2.5 py-1 bg-flywheel/10 border border-flywheel/20 text-flywheel text-[9px] font-mono uppercase tracking-[0.2em]">
-            <ShieldCheck size={11} /> Production Active • SAP ODATA Ready
+            <ShieldCheck size={11} /> Prototype • Synthetic data • No live integrations
           </div>
           <h1 className="text-4xl md:text-5xl font-black tracking-tighter uppercase font-display text-white leading-none">
             The Discovery <br/>
@@ -126,7 +125,7 @@ export default function HomeDashboardView({ summary, onNavigate, onOpenFAQ }: Pr
             <div>
               <div className="text-[9px] text-white/40 uppercase tracking-wide">Processed Claims volume</div>
               <div className="text-2xl font-black text-white mt-1">{processedClaims}</div>
-              <div className="text-[8px] font-mono text-white/40 mt-0.5 uppercase">99.8% GL SAP Reconciliation</div>
+              <div className="text-[8px] font-mono text-white/40 mt-0.5 uppercase">In-memory demo ledger</div>
             </div>
           </div>
         </div>

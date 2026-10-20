@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, Send, RefreshCw, Layers } from 'lucide-react';
+import { Sparkles, Send, RefreshCw, Layers, Wifi, WifiOff } from 'lucide-react';
 
 interface Props {
   triggerRefreshToggle: boolean;
@@ -11,8 +11,21 @@ const PRESET_QUERIES = [
   "What is the system's economic optimization rate for V004 duplicates?"
 ];
 
+/**
+ * Where the rendered text came from. The server always answers, falling back
+ * to a canned narrative when the model is unreachable - so the client has to
+ * say which one it is showing. Previously the fallback was presented as model
+ * output, complete with an invented confidence score.
+ */
+interface Provenance {
+  source: 'live' | 'cached';
+  model: string | null;
+  reason?: string;
+}
+
 export default function AiInsightsHub({ triggerRefreshToggle }: Props) {
   const [insight, setInsight] = useState("");
+  const [provenance, setProvenance] = useState<Provenance | null>(null);
   const [prompt, setPrompt] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -27,12 +40,15 @@ export default function AiInsightsHub({ triggerRefreshToggle }: Props) {
       const data = await response.json();
       if (data.text) {
         setInsight(data.text);
+        setProvenance({ source: data.source, model: data.model, reason: data.reason });
       } else {
-        setInsight("Error obtaining diagnostic insights. Please ensure GEMINI_API_KEY is configured.");
+        setInsight("The synthesis service returned no text.");
+        setProvenance(null);
       }
     } catch (err) {
       console.error(err);
-      setInsight("Network error occurred during clinical pathway synthesis. Ensure server.ts is compiling.");
+      setInsight("Could not reach the synthesis service.");
+      setProvenance(null);
     } finally {
       setLoading(false);
     }
@@ -93,16 +109,37 @@ export default function AiInsightsHub({ triggerRefreshToggle }: Props) {
           </div>
         </div>
 
-        {/* Prediction Accuracy Meter */}
-        <div className="p-4 border border-white/15 bg-black/40 rounded-none space-y-2 mb-6" id="accuracy-meter-container">
-          <div className="flex justify-between items-center text-[9px] uppercase font-mono tracking-wider">
-            <span className="text-white/40 font-bold">Prediction Accuracy</span>
-            <span className="text-flywheel font-black">98.4%</span>
+        {/* Provenance badge - says plainly whether this is model output */}
+        {provenance && (
+          <div
+            className={`p-3 border rounded-none space-y-1 mb-6 ${
+              provenance.source === 'live'
+                ? 'border-flywheel/40 bg-flywheel/5'
+                : 'border-orange-400/40 bg-orange-400/5'
+            }`}
+            id="ai-provenance-badge"
+          >
+            <div className="flex items-center gap-2 text-[9px] uppercase font-mono tracking-wider font-bold">
+              {provenance.source === 'live' ? (
+                <>
+                  <Wifi size={10} className="text-flywheel" />
+                  <span className="text-flywheel">Live model output</span>
+                  <span className="text-white/40 normal-case font-normal">{provenance.model}</span>
+                </>
+              ) : (
+                <>
+                  <WifiOff size={10} className="text-orange-300" />
+                  <span className="text-orange-300">Cached narrative &mdash; not model output</span>
+                </>
+              )}
+            </div>
+            {provenance.source === 'cached' && provenance.reason && (
+              <div className="text-[9px] text-white/40 font-mono leading-relaxed">
+                {provenance.reason}
+              </div>
+            )}
           </div>
-          <div className="w-full h-[3px] bg-white/10">
-            <div className="w-[98%] h-full bg-flywheel transition-all duration-1000"></div>
-          </div>
-        </div>
+        )}
 
         {/* Quick query presets */}
         <div>

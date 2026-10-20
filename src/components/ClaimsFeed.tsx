@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Claim, RuleDetail } from '../types';
+import { useState } from 'react';
+import { Claim } from '../types';
 import { Check, AlertTriangle, X, ShieldAlert, Code, User, FileText, Landmark } from 'lucide-react';
 
 interface Props {
@@ -35,7 +35,6 @@ export default function ClaimsFeed({ claims, onAction, onNavigate }: Props) {
           claims.map(claim => {
             const isApproved = claim.status === 'approved';
             const isFlagged = claim.status === 'flagged';
-            const isRejected = claim.status === 'rejected';
             const isSelected = claim.document_id === selectedClaimId;
 
             return (

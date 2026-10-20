@@ -1,4 +1,3 @@
-import React from 'react';
 import { FinancialSummary } from '../types';
 import { TrendingUp, Award, Clock, Sparkles } from 'lucide-react';
 
@@ -24,13 +23,17 @@ export default function DashboardMetrics({ summary, onNavigate }: Props) {
         <div>
           <div className="text-[10px] font-bold tracking-[0.3em] uppercase text-flywheel mb-2 flex items-center justify-between">
             <span className="flex items-center gap-2">
-              <TrendingUp size={12} className="animate-pulse" /> Health Momentum
+              <TrendingUp size={12} /> Avoided Leakage
             </span>
             <span className="text-[8px] opacity-0 group-hover:opacity-100 transition-opacity uppercase font-mono tracking-wider font-normal text-white/50">View Demo ↗</span>
           </div>
-          <div className="text-5xl font-black font-display tracking-tighter">84<span className="text-base text-flywheel ml-1 font-medium font-sans animate-pulse">+12.4%</span></div>
+          <div className="text-5xl font-black font-display tracking-tighter">
+            R {summary.avoided_leakage_zar.toLocaleString()}
+          </div>
         </div>
-        <p className="text-[10px] uppercase font-bold tracking-widest text-white/40 mt-4 leading-normal">Clinical Velocity Score</p>
+        <p className="text-[10px] uppercase font-bold tracking-widest text-white/40 mt-4 leading-normal">
+          Value of claims declined on audit
+        </p>
       </div>
 
       {/* Reinvestment Pool */}
@@ -75,7 +78,7 @@ export default function DashboardMetrics({ summary, onNavigate }: Props) {
           </div>
         </div>
         <p className="text-[10px] uppercase font-bold tracking-widest text-white/40 mt-4 leading-normal">
-          {summary.auto_approved_count} of {summary.total_claims_count} claims automated
+          {summary.auto_approved_count.toLocaleString()} of {summary.total_claims_count.toLocaleString()} claims automated
         </p>
       </div>
 
